@@ -160,6 +160,39 @@ pipeline {
             echo 'Skipping Kafka Streams archetype test for Java 17'
           }
         }
+
+        stage('PowerPC') {
+          options {
+            timestamps()
+          }
+          environment {
+            SCALA_VERSION=2.12
+          }
+          stages {
+            stage('Check PowerPC Agent') {
+              agent { label 'ppc64le' }
+              options {
+                timeout(time: 5, unit: 'MINUTES')
+              }
+              steps {
+                echo 'PowerPC ok'
+              }
+            }
+            stage('Run PowerPC Build') {
+              agent { label 'ppc64le' }
+              options {
+                timeout(time: 2, unit: 'HOURS')
+              }
+              steps {
+                doValidation()
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                  doTest(env, 'unitTest')
+                }
+                echo 'Skipping Kafka Streams archetype test for PowerPC build'
+              }
+            }
+          }
+        }        
         
         // To avoid excessive Jenkins resource usage, we only run the stages
         // above at the PR stage. The ones below are executed after changes
